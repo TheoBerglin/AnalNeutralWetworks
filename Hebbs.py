@@ -1,0 +1,1 @@
+print("Adas äter otvättad röv till frukost")
