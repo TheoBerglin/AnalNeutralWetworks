@@ -16,12 +16,12 @@ def get_pattern_value():
 
 
 def get_pattern(p_size):
-    return [get_pattern_value() for i in range(0, p_size)]
+    return [get_pattern_value() for i in range(p_size)]
 
 
 def create_random_patterns(nbr_of_patterns, p_size):
     patterns = dict()
-    for mu in range(0, nbr_of_patterns):
+    for mu in range(nbr_of_patterns):
         patterns[mu] = get_pattern(p_size)
     return patterns
 
@@ -48,12 +48,14 @@ def calculate_weight(i, j, patterns):
 
 
 def create_weight_matrix(patterns):
-    weight_matrix = [[]]
-    for i in range(0, N):
-        for j in range(0, i):
+    weight_matrix = [[0 for x in range(N)] for y in range(N)]
+    for i in range(N):
+        for j in range(i+1):
             tmp_weight = calculate_weight(i, j, patterns)
             weight_matrix[i][j] = tmp_weight
             weight_matrix[j][i] = tmp_weight
+
+    return weight_matrix
 
 
 def calculate_error_prob(nbr_of_patterns):
@@ -61,10 +63,16 @@ def calculate_error_prob(nbr_of_patterns):
     correct_sign_counter = 0
     while bit_counter < nbr_of_bits:
         random_patterns = create_random_patterns(nbr_of_patterns, N)
+        weights = create_weight_matrix(random_patterns)
         for nu, bits in random_patterns.items():
-            for i in range(0, len(bits)):
-                c_tmp = calculate_C(i, nu, random_patterns)
-                if c_tmp < 1:
+            for i in range(N):
+                tmp_sum = 0
+                for j in range(N):
+                    tmp_sum += weights[i][j] * bits[j]
+                if tmp_sum == 0:
+                    continue
+                tmp_sum = 1 if tmp_sum > 0 else -1
+                if tmp_sum == bits[i]:
                     correct_sign_counter += 1
                 bit_counter += 1
 
@@ -74,6 +82,4 @@ def calculate_error_prob(nbr_of_patterns):
 
 
 print(calculate_error_prob(20))
-
-
 
