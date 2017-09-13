@@ -1,10 +1,12 @@
 import random
+from tqdm import tqdm
 print("Adas äter otvättad röv till frukost")
 
 p = [x for x in range(0, 420, 20)]
+# p = [x for x in range(20, 30, 1)]
 p[0] = 1
 N = 200
-nbr_of_bits = pow(10, 5)
+nbr_of_bits = pow(10, 4)
 
 
 def get_pattern_value():
@@ -65,6 +67,7 @@ def calculate_error_prob(nbr_of_patterns):
         random_patterns = create_random_patterns(nbr_of_patterns, N)
         weights = create_weight_matrix(random_patterns)
         for nu, bits in random_patterns.items():
+            correct_pattern = True
             for i in range(N):
                 tmp_sum = 0
                 for j in range(N):
@@ -72,14 +75,25 @@ def calculate_error_prob(nbr_of_patterns):
                 if tmp_sum == 0:
                     continue
                 tmp_sum = 1 if tmp_sum > 0 else -1
-                if tmp_sum == bits[i]:
-                    correct_sign_counter += 1
-                bit_counter += 1
+                if tmp_sum != bits[i]:
+                    correct_pattern = False
+                    break
+            if correct_pattern:
+                correct_sign_counter += N
+            bit_counter += N
+            if bit_counter >= nbr_of_bits:
+                return 1 - correct_sign_counter / nbr_of_bits
+    print('Bit Counter: %d Correct sign counter: %d '%( bit_counter, correct_sign_counter))
 
-    return correct_sign_counter/nbr_of_bits
+
+def main():
+    error_prob = []
+    with open('results.txt', 'w') as file:
+        for value in tqdm(p):
+            temp_error = calculate_error_prob(value)
+            error_prob.append(temp_error)
+            file.write('%s\t%s\n' % (value, temp_error))
 
 
-
-
-print(calculate_error_prob(20))
-
+if __name__ == '__main__':
+    main()
