@@ -1,9 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import math
 import random
-N=200
-beta = 2
+
+
 def get_pattern_value():
     r = random.random()
     if r < 0.5:
@@ -11,26 +10,24 @@ def get_pattern_value():
     else:
         return 1
 
-def get_pattern(p_size):
-    return [get_pattern_value() for i in range(p_size)]
 
-
-def create_random_patterns(nbr_of_patterns, p_size):
-    patterns = dict()
-    for mu in range(nbr_of_patterns):
-        patterns[mu] = get_pattern(p_size)
+def create_random_patterns(N, p):
+    patterns = np.zeros((p, N), dtype=np.int)
+    for pattern in range(p):
+        for bit in range(N):
+            patterns[pattern][bit] = get_pattern_value()
     return patterns
 
 
 def calculate_weight(i, j, patterns):
     total_sum = 0
-    for mu, bits in patterns.items():
-        total_sum += bits[i] * bits[j]
+    for pattern in patterns:
+        total_sum += pattern[i] * pattern[j]
     return total_sum/N
 
 
-def create_weight_matrix(patterns):
-    weight_matrix = [[0 for x in range(N)] for y in range(N)]
+def create_weight_matrix(patterns, N):
+    weight_matrix = np.zeros((N, N))
     for i in range(N):
         for j in range(i+1):
             if j == i:
@@ -38,70 +35,59 @@ def create_weight_matrix(patterns):
             tmp_weight = calculate_weight(i, j, patterns)
             weight_matrix[i][j] = tmp_weight
             weight_matrix[j][i] = tmp_weight
-
     return weight_matrix
 
-def calculate_bi(i_index,weights, prev_S):
+
+def activation_function(b, beta):
+    return 1/(1+np.exp(-2*beta*b))
+
+
+def local_field(weights, S, index_i):
     sum = 0
+    wi = weights[index_i]
+    N = len(wi)
     for j in range(N):
-        sum += weights[i_index][j]*prev_S[j]
+        sum += wi[j]*S[j]
     return sum
 
 
-def calculate_g(b):
-    math.tanh(beta*b)
-    return 1/(1+np.exp(-2*beta*b))
+def state_update(g):
+    return 1 if random.random() < g else -1
 
-def update_m(S, pattern):
+
+def calculate_order_parameter(N, S, pattern):
     sum = 0
-    for j in range(N):
-        sum += pattern[j]*S[j]
-    #print(sum/N)
+    for i in range(N):
+        sum += S[i]*pattern[i]
     return sum/N
 
-def update_state(g):
-    r = random.random()
-    if r < g:
-        return +1
-    else:
-        return -1
 
-
-def main():
-
-    for j in range(1):
-        p = 40
-        random_patterns = create_random_patterns(p, N)
-        weights = create_weight_matrix(random_patterns)
-
-        m_check = 0
-        feed_pattern = random_patterns[m_check]
-        # S=[get_pattern_value() for i in range(N)]
-        S = feed_pattern
-        t_max = 1000
-        m = dict()
-        m[j] = list()
-        for i in range(t_max):
-
-            m_value =update_m(S, feed_pattern)
-            m[j].append(m_value)
-
-            update_index = random.randint(0, N-1)
-            b_update = calculate_bi(update_index, weights, S)
-
-            g_update = calculate_g(b_update)
-            tmp = S[update_index]
-            #print(b_update*tmp)
-            #print(g_update)
-            tmp_g =update_state(g_update)
-            S[update_index] = tmp_g
-            #print("%d,%d,%d"%(tmp, tmp_g, S[update_index]))
-    #        print(b_update, g_update, S[update_index])
-        print(update_m(S, feed_pattern))
-        m[j].append(update_m(S, feed_pattern))
-        plt.plot(range(t_max+1), m[j])
-    plt.show()
+def calculate_m_over_time(N, beta, feed_pattern, weights, time_max):
+    m = list()
+    S = feed_pattern.copy()
+    for t in range(time_max):
+        m.append(calculate_order_parameter(N, S, feed_pattern))
+        async_update_index = random.randint(0, N-1)
+        b_update = local_field(weights, S, async_update_index)
+        g_update = activation_function(b_update, beta)
+        S[async_update_index] = state_update(g_update)
+    return m
 
 
 if __name__ == '__main__':
-    main()
+    for i in range(20):
+        N = 200
+        beta = 2
+        p = 40
+        patterns = create_random_patterns(N, p)
+        weights = create_weight_matrix(patterns, N)
+
+        time_max = 10000
+
+        m = calculate_m_over_time(N, beta, patterns[0], weights, time_max)
+        plt.plot(range(len(m)), m)
+
+    plt.ylim([0, 1])
+    plt.xlabel('Time steps')
+    plt.ylabel('Order parameter')
+    plt.show()
