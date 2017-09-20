@@ -1,5 +1,6 @@
 import random
 from tqdm import tqdm
+from scipy.special import erf, erfc
 print("Adas äter otvättad röv till frukost")
 
 p = [x for x in range(0, 420, 20)]
@@ -86,6 +87,7 @@ def calculate_error_prob(nbr_of_patterns):
     print('Bit Counter: %d Correct sign counter: %d '%( bit_counter, correct_sign_counter))
 
 
+
 def main():
     error_prob = []
     with open('results.txt', 'w') as file:
@@ -95,5 +97,7 @@ def main():
             file.write('%s\t%s\n' % (value, temp_error))
 
 
+
+
 if __name__ == '__main__':
-    main()
+    #main()
