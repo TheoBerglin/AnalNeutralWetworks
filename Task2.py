@@ -50,7 +50,7 @@ def calculate_bi(i_index,weights, prev_S):
 
 def calculate_g(b):
     math.tanh(beta*b)
-    return 1/(1+math.exp(-2*beta*b))
+    return 1/(1+np.exp(-2*beta*b))
 
 def update_m(S, pattern):
     sum = 0
@@ -61,7 +61,7 @@ def update_m(S, pattern):
 
 def update_state(g):
     r = random.random()
-    if r<g:
+    if r < g:
         return +1
     else:
         return -1
@@ -69,7 +69,7 @@ def update_state(g):
 
 def main():
 
-    for j in range(20):
+    for j in range(1):
         p = 40
         random_patterns = create_random_patterns(p, N)
         weights = create_weight_matrix(random_patterns)
@@ -82,6 +82,7 @@ def main():
         m = dict()
         m[j] = list()
         for i in range(t_max):
+
             m_value =update_m(S, feed_pattern)
             m[j].append(m_value)
 
@@ -96,6 +97,7 @@ def main():
             S[update_index] = tmp_g
             #print("%d,%d,%d"%(tmp, tmp_g, S[update_index]))
     #        print(b_update, g_update, S[update_index])
+        print(update_m(S, feed_pattern))
         m[j].append(update_m(S, feed_pattern))
         plt.plot(range(t_max+1), m[j])
     plt.show()
