@@ -88,7 +88,7 @@ def calculate_error_prob(nbr_of_patterns):
             if bit_counter >= nbr_of_bits:
                 print('Bit Counter: %d Correct sign counter: %d ' % (bit_counter, correct_sign_counter))
                 return 1 - correct_sign_counter / nbr_of_bits
-    print('Bit Counter: %d Correct sign counter: %d '%( bit_counter, correct_sign_counter))
+    print('Bit Counter: %d Correct sign counter: %d ' % (bit_counter, correct_sign_counter))
 
 
 
