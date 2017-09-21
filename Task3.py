@@ -58,7 +58,7 @@ def calculate_activation(b, beta):
 
 
 def calculate_activation_prime(b, beta):
-    return 1 - calculate_activation(b, beta)**2
+    return beta * (1 - calculate_activation(b, beta)**2)
 
 
 def calculate_weight_update(learning_rate, b, input_data, output, target, beta):
@@ -82,42 +82,61 @@ def run_3a():
     valid_dim1, valid_dim2, valid_target = read_data('valid_data_2017.txt')
     learning_rate = 0.02
     beta = 1/2
-    weights = create_weights(2, 1)
-    bias = create_biases(1)
-    iterations = 10**5
-    energy_values = np.zeros([2, iterations])
+    class_error_train = np.zeros(10)
+    class_error_val = np.zeros(10)
 
-    for i in range(iterations):
-        # Calculate output on train data
-        rand = random.randint(0, 299)
-        input_data = [train_dim1[rand], train_dim2[rand]]
-        target_data = train_target[rand]
-        b = calculate_b(weights, input_data, bias, 2, 0)
-        output = calculate_activation(b, beta)
-        energy_values[0, i] = calculate_energy(target_data, output)
+    for runs in range(10):
+        weights = create_weights(2, 1)
+        bias = create_biases(1)
+        iterations = 10**6
+        energy_values = np.zeros([2, iterations])
+        outputs_train_all = np.zeros(300)
+        outputs_val_all = np.zeros(200)
 
-        # Calculate output on valid data
-        rand = random.randint(0, 199)
-        valid_input_data = [valid_dim1[rand], valid_dim2[rand]]
-        valid_target_data = valid_target[rand]
-        b_valid = calculate_b(weights, valid_input_data, bias, 2, 0)
-        output_valid = calculate_activation(b_valid, beta)
-        energy_values[1, i] = calculate_energy(valid_target_data, output_valid)
+        for i in range(iterations):
+            # Calculate output on train data
+            rand = random.randint(0, 299)
+            input_data = [train_dim1[rand], train_dim2[rand]]
+            target_data = train_target[rand]
+            b = calculate_b(weights, input_data, bias, 2, 0)
+            output = calculate_activation(b, beta)
 
-        # Calculate gradient and update weights and bias
-        for index in range(len(weights)):
-            weights[index] += calculate_weight_update(learning_rate, b, input_data[index], output, target_data, beta)
-        bias += calculate_bias_update(learning_rate, b, output, target_data, beta)
+            # Calculate gradient and update weights and bias
+            for index in range(len(weights)):
+                weights[index] += calculate_weight_update(learning_rate, b, input_data[index], output, target_data, beta)
+            bias += calculate_bias_update(learning_rate, b, output, target_data, beta)
 
-    # Pick every 10th data point
-    energy_values2 = np.zeros([2, int(iterations/10)])
-    energy_values2[0] = [energy_values[0][i] for i in range(1, iterations, 10)]
-    energy_values2[1] = [energy_values[1][i] for i in range(1, iterations, 10)]
+            #Calculate energy function
+            for index in range(300):
+                input_data = [train_dim1[index], train_dim2[index]]
+                target_data = train_target[index]
+                b = calculate_b(weights, input_data, bias, 2, 0)
+                outputs_train_all[index] = calculate_activation(b, beta)
+                energy_values[0, i] += calculate_energy(target_data, outputs_train_all[index])
 
-    # Plot
-    plt.plot(range(int(iterations/10)), energy_values2[0, :], label='Train')
-    plt.plot(range(int(iterations/10)), energy_values2[1, :], label='Valid')
-    plt.legend(loc = 1)
+            for index in range(200):
+                valid_input_data = [valid_dim1[index], valid_dim2[index]]
+                valid_target_data = valid_target[index]
+                b_valid = calculate_b(weights, valid_input_data, bias, 2, 0)
+                outputs_val_all[index] = calculate_activation(b_valid, beta)
+                energy_values[1, i] += calculate_energy(valid_target_data, outputs_val_all[index])
+
+        # Plot
+        plt.plot(range(iterations), energy_values[0, :])
+        plt.plot(range(iterations), energy_values[1, :])
+
+        class_error_train[runs] = sum(abs(train_target - outputs_train_all))/(2*300)
+        class_error_val[runs] = sum(abs(valid_target - outputs_val_all))/(2*200)
+
+    avg_class_error = [np.mean(class_error_train), np.mean(class_error_val)]
+    min_class_error = [np.min(class_error_train), np.min(class_error_val)]
+    var_class_error = [np.var(class_error_train), np.var(class_error_val)]
+    print('Average training classification error: %f \t Average validation classification error: %f \n ' % (
+    avg_class_error[0], avg_class_error[1]))
+    print('Minimum training classification error: %f \t Minimum validation classification error: %f \n ' % (
+    min_class_error[0], min_class_error[1]))
+    print('Variance training classification error: %f \t Variance validation classification error: %f \n ' % (
+    var_class_error[0], var_class_error[1]))
     plt.xlabel('Time steps')
     plt.ylabel('Energy function')
     plt.show()
