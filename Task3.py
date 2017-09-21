@@ -106,7 +106,7 @@ def run_3a():
                 weights[index] += calculate_weight_update(learning_rate, b, input_data[index], output, target_data, beta)
             bias += calculate_bias_update(learning_rate, b, output, target_data, beta)
 
-            #Calculate energy function
+            # Calculate energy values for train set
             for index in range(300):
                 input_data = [train_dim1[index], train_dim2[index]]
                 target_data = train_target[index]
@@ -114,6 +114,7 @@ def run_3a():
                 outputs_train_all[index] = calculate_activation(b, beta)
                 energy_values[0, i] += calculate_energy(target_data, outputs_train_all[index])
 
+            # Calculate energy values for valid set
             for index in range(200):
                 valid_input_data = [valid_dim1[index], valid_dim2[index]]
                 valid_target_data = valid_target[index]
@@ -142,76 +143,100 @@ def run_3a():
     plt.show()
 
 
-def run_3c():
+def run_3b():
     # Initialize weights and bias and read train/valid data
     train_dim1, train_dim2, train_target = read_data('train_data_2017.txt')
     valid_dim1, valid_dim2, valid_target = read_data('valid_data_2017.txt')
     learning_rate = 0.02
     beta = 1 / 2
-    weights_first_layer = create_weights(2, 4)
-    weights_second_layer = create_weights(4, 1)
-    bias_first_layer = create_biases(4)
-    bias_second_layer = create_biases(1)
-    iterations = 10 ** 3
-    energy_values = np.zeros([2, iterations])
+    class_error_train = np.zeros(10)
+    class_error_val = np.zeros(10)
 
-    for i in range(iterations):
-        # Calculate output on train data
-        rand = random.randint(0, 299)
-        input_data = [train_dim1[rand], train_dim2[rand]]
-        target_data = train_target[rand]
-        b_first_layer = np.zeros(4)
-        output_first_layer = np.zeros(4)
-        for j in range(4):
-            b_first_layer[j] = calculate_b(weights_first_layer, input_data, bias_first_layer[j], 2, j)
-            output_first_layer[j] = calculate_activation(b_first_layer[j], beta)     
-        b_output = calculate_b(weights_second_layer, output_first_layer, bias_second_layer, 4, 0)
-        output = calculate_activation(b_output, beta)
-        
-        energy_values[0, i] = calculate_energy(target_data, output)
+    for runs in range(10):
+        weights_first_layer = create_weights(2, 4)
+        weights_second_layer = create_weights(4, 1)
+        bias_first_layer = create_biases(4)
+        bias_second_layer = create_biases(1)
+        iterations = 10 ** 2
+        energy_values = np.zeros([2, iterations])
+        outputs_train_all = np.zeros(300)
+        outputs_val_all = np.zeros(200)
 
-        # Calculate output on valid data
-        rand = random.randint(0, 199)
-        valid_input_data = [valid_dim1[rand], valid_dim2[rand]]
-        valid_target_data = valid_target[rand]
-        b_valid_first_layer = np.zeros(4)
-        output_valid_first_layer = np.zeros(4)
-        for j in range(4):
-            b_valid_first_layer[j] = calculate_b(weights_first_layer, valid_input_data, bias_first_layer[j], 2, j)
-            output_valid_first_layer[j] = calculate_activation(b_valid_first_layer[j], beta)
-        b_valid_output = calculate_b(weights_second_layer, output_valid_first_layer, bias_second_layer, 4, 0)
-        output_valid = calculate_activation(b_valid_output, beta)
-        
-        energy_values[1, i] = calculate_energy(valid_target_data, output_valid)
-        weights_second_layer_tmp = weights_second_layer
-        # Update weights and biases
-        delta_second_layer = (target_data - output) * calculate_activation_prime(b_output, beta)
-        for index in range(len(weights_second_layer)):
-            weights_second_layer[index] += calculate_weight_update(learning_rate, b_output, output_first_layer[index],
-                                                                   output, target_data, beta)
-        bias_second_layer += calculate_bias_update(learning_rate, b_output, output, target_data, beta)
+        for i in range(iterations):
+            # Calculate output on train data
+            rand = random.randint(0, 299)
+            input_data = [train_dim1[rand], train_dim2[rand]]
+            target_data = train_target[rand]
+            b_first_layer = np.zeros(4)
+            output_first_layer = np.zeros(4)
+            for j in range(4):
+                b_first_layer[j] = calculate_b(weights_first_layer, input_data, bias_first_layer[j], 2, j)
+                output_first_layer[j] = calculate_activation(b_first_layer[j], beta)
+            b_output = calculate_b(weights_second_layer, output_first_layer, bias_second_layer, 4, 0)
+            output = calculate_activation(b_output, beta)
 
+            # Update weights and biases
+            weights_second_layer_tmp = weights_second_layer
+            delta_second_layer = (target_data - output) * calculate_activation_prime(b_output, beta)
+            for index in range(len(weights_second_layer)):
+                weights_second_layer[index] += calculate_weight_update(learning_rate, b_output, output_first_layer[index],
+                                                                       output, target_data, beta)
+            bias_second_layer += calculate_bias_update(learning_rate, b_output, output, target_data, beta)
 
-        for column in range(weights_first_layer.shape[1]):
-            delta_first_layer_tmp = calculate_first_layer_delta(delta_second_layer, weights_second_layer_tmp[column],
-                                                                b_first_layer[column], beta)
-            for row in range(weights_first_layer.shape[0]):
-                weight_update_tmp = delta_first_layer_tmp * learning_rate * input_data[row]
-                weights_first_layer[row][column] += weight_update_tmp
-            bias_first_layer[column] += -learning_rate * delta_first_layer_tmp
+            for column in range(weights_first_layer.shape[1]):
+                delta_first_layer_tmp = calculate_first_layer_delta(delta_second_layer, weights_second_layer_tmp[column],
+                                                                    b_first_layer[column], beta)
+                for row in range(weights_first_layer.shape[0]):
+                    weight_update_tmp = delta_first_layer_tmp * learning_rate * input_data[row]
+                    weights_first_layer[row][column] += weight_update_tmp
+                bias_first_layer[column] += -learning_rate * delta_first_layer_tmp
 
-    energy_values2 = np.zeros([2, int(iterations / 10)])
+            # Calculate energy values for train set
+            for index in range(300):
+                input_data = [train_dim1[index], train_dim2[index]]
+                target_data = train_target[index]
+                b_first_layer = np.zeros(4)
+                output_first_layer = np.zeros(4)
+                for j in range(4):
+                    b_first_layer[j] = calculate_b(weights_first_layer, input_data, bias_first_layer[j], 2, j)
+                    output_first_layer[j] = calculate_activation(b_first_layer[j], beta)
+                b_output = calculate_b(weights_second_layer, output_first_layer, bias_second_layer, 4, 0)
+                outputs_train_all[index] = calculate_activation(b_output, beta)
+                energy_values[0, i] += calculate_energy(target_data, outputs_train_all[index])
 
-    energy_values2[0] = [energy_values[0][i] for i in range(1, iterations, 10)]
-    energy_values2[1] = [energy_values[1][i] for i in range(1, iterations, 10)]
+            # Calculate energy values for valid set
+            for index in range(200):
+                valid_input_data = [valid_dim1[index], valid_dim2[index]]
+                valid_target_data = valid_target[index]
+                b_valid_first_layer = np.zeros(4)
+                output_valid_first_layer = np.zeros(4)
+                for j in range(4):
+                    b_valid_first_layer[j] = calculate_b(weights_first_layer, valid_input_data, bias_first_layer[j], 2, j)
+                    output_valid_first_layer[j] = calculate_activation(b_valid_first_layer[j], beta)
+                b_valid_output = calculate_b(weights_second_layer, output_valid_first_layer, bias_second_layer, 4, 0)
+                outputs_val_all[index] = calculate_activation(b_valid_output, beta)
+                energy_values[1, i] += calculate_energy(valid_target_data, outputs_val_all[index])
 
-    plt.plot(range(int(iterations / 10)), energy_values2[0, :], label='Train')
-    plt.plot(range(int(iterations / 10)), energy_values2[1, :], label='Valid')
-    plt.legend(loc=1)
+            # Plot
+        plt.plot(range(iterations), energy_values[0, :])
+        plt.plot(range(iterations), energy_values[1, :])
+
+        class_error_train[runs] = sum(abs(train_target - outputs_train_all)) / (2 * 300)
+        class_error_val[runs] = sum(abs(valid_target - outputs_val_all)) / (2 * 200)
+
+    avg_class_error = [np.mean(class_error_train), np.mean(class_error_val)]
+    min_class_error = [np.min(class_error_train), np.min(class_error_val)]
+    var_class_error = [np.var(class_error_train), np.var(class_error_val)]
+    print('Average training classification error: %f \t Average validation classification error: %f \n ' % (
+        avg_class_error[0], avg_class_error[1]))
+    print('Minimum training classification error: %f \t Minimum validation classification error: %f \n ' % (
+        min_class_error[0], min_class_error[1]))
+    print('Variance training classification error: %f \t Variance validation classification error: %f \n ' % (
+        var_class_error[0], var_class_error[1]))
     plt.xlabel('Time steps')
     plt.ylabel('Energy function')
     plt.show()
 
 
 if __name__ == '__main__':
-    run_3a()
+    run_3b()
