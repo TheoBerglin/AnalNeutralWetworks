@@ -2,7 +2,8 @@ import numpy as np
 import random
 import csv
 import matplotlib.pyplot as plt
-
+from tqdm import tqdm
+import math
 print('Theo äter infekterad varfylld pungkula till middag')
 
 
@@ -89,11 +90,12 @@ def run_3a():
         weights = create_weights(2, 1)
         bias = create_biases(1)
         iterations = 10**6
-        energy_values = np.zeros([2, iterations])
+        energy_values = np.zeros([2, int(iterations/100)])
         outputs_train_all = np.zeros(300)
         outputs_val_all = np.zeros(200)
+        energy_index = 0
 
-        for i in range(iterations):
+        for i in tqdm(iterable=range(iterations), desc="Timesteps for run %d"%runs, mininterval=15):
             # Calculate output on train data
             rand = random.randint(0, 299)
             input_data = [train_dim1[rand], train_dim2[rand]]
@@ -105,26 +107,27 @@ def run_3a():
             for index in range(len(weights)):
                 weights[index] += calculate_weight_update(learning_rate, b, input_data[index], output, target_data, beta)
             bias += calculate_bias_update(learning_rate, b, output, target_data, beta)
+            if i % 100 == 0:
+                # Calculate energy values for train set
+                for index in range(300):
+                    input_data = [train_dim1[index], train_dim2[index]]
+                    target_data = train_target[index]
+                    b = calculate_b(weights, input_data, bias, 2, 0)
+                    outputs_train_all[index] = calculate_activation(b, beta)
+                    energy_values[0, energy_index] += calculate_energy(target_data, outputs_train_all[index])
 
-            # Calculate energy values for train set
-            for index in range(300):
-                input_data = [train_dim1[index], train_dim2[index]]
-                target_data = train_target[index]
-                b = calculate_b(weights, input_data, bias, 2, 0)
-                outputs_train_all[index] = calculate_activation(b, beta)
-                energy_values[0, i] += calculate_energy(target_data, outputs_train_all[index])
-
-            # Calculate energy values for valid set
-            for index in range(200):
-                valid_input_data = [valid_dim1[index], valid_dim2[index]]
-                valid_target_data = valid_target[index]
-                b_valid = calculate_b(weights, valid_input_data, bias, 2, 0)
-                outputs_val_all[index] = calculate_activation(b_valid, beta)
-                energy_values[1, i] += calculate_energy(valid_target_data, outputs_val_all[index])
+                # Calculate energy values for valid set
+                for index in range(200):
+                    valid_input_data = [valid_dim1[index], valid_dim2[index]]
+                    valid_target_data = valid_target[index]
+                    b_valid = calculate_b(weights, valid_input_data, bias, 2, 0)
+                    outputs_val_all[index] = calculate_activation(b_valid, beta)
+                    energy_values[1, energy_index] += calculate_energy(valid_target_data, outputs_val_all[index])
+                energy_index += 1
 
         # Plot
-        plt.plot(range(iterations), energy_values[0, :])
-        plt.plot(range(iterations), energy_values[1, :])
+        plt.plot(range(int(iterations/100)), energy_values[0, :])
+        plt.plot(range(int(iterations/100)), energy_values[1, :])
 
         class_error_train[runs] = sum(abs(train_target - outputs_train_all))/(2*300)
         class_error_val[runs] = sum(abs(valid_target - outputs_val_all))/(2*200)
@@ -162,12 +165,12 @@ def run_3b():
         weights_second_layer = create_weights(4, 1)
         bias_first_layer = create_biases(4)
         bias_second_layer = create_biases(1)
-        iterations = 10 ** 2
-        energy_values = np.zeros([2, iterations])
+        iterations = 10 ** 6
+        energy_values = np.zeros([2, int(iterations/100)])
         outputs_train_all = np.zeros(300)
         outputs_val_all = np.zeros(200)
-
-        for i in range(iterations):
+        energy_index = 0
+        for i in tqdm(iterable=range(iterations), desc="Timesteps for run %d"%runs, mininterval=15):
             # Calculate output on train data
             rand = random.randint(0, 299)
             input_data = [train_dim1[rand], train_dim2[rand]]
@@ -195,36 +198,40 @@ def run_3b():
                     weight_update_tmp = delta_first_layer_tmp * learning_rate * input_data[row]
                     weights_first_layer[row][column] += weight_update_tmp
                 bias_first_layer[column] += -learning_rate * delta_first_layer_tmp
+            if i%100==0:
+                # Calculate energy values for train set
+                for index in range(300):
+                    input_data = [train_dim1[index], train_dim2[index]]
+                    target_data = train_target[index]
+                    b_first_layer = np.zeros(4)
+                    output_first_layer = np.zeros(4)
+                    for j in range(4):
+                        b_first_layer[j] = calculate_b(weights_first_layer, input_data, bias_first_layer[j], 2, j)
+                        output_first_layer[j] = calculate_activation(b_first_layer[j], beta)
+                    b_output = calculate_b(weights_second_layer, output_first_layer, bias_second_layer, 4, 0)
+                    outputs_train_all[index] = calculate_activation(b_output, beta)
+                    energy_values[0, energy_index] += calculate_energy(target_data, outputs_train_all[index])
 
-            # Calculate energy values for train set
-            for index in range(300):
-                input_data = [train_dim1[index], train_dim2[index]]
-                target_data = train_target[index]
-                b_first_layer = np.zeros(4)
-                output_first_layer = np.zeros(4)
-                for j in range(4):
-                    b_first_layer[j] = calculate_b(weights_first_layer, input_data, bias_first_layer[j], 2, j)
-                    output_first_layer[j] = calculate_activation(b_first_layer[j], beta)
-                b_output = calculate_b(weights_second_layer, output_first_layer, bias_second_layer, 4, 0)
-                outputs_train_all[index] = calculate_activation(b_output, beta)
-                energy_values[0, i] += calculate_energy(target_data, outputs_train_all[index])
-
-            # Calculate energy values for valid set
-            for index in range(200):
-                valid_input_data = [valid_dim1[index], valid_dim2[index]]
-                valid_target_data = valid_target[index]
-                b_valid_first_layer = np.zeros(4)
-                output_valid_first_layer = np.zeros(4)
-                for j in range(4):
-                    b_valid_first_layer[j] = calculate_b(weights_first_layer, valid_input_data, bias_first_layer[j], 2, j)
-                    output_valid_first_layer[j] = calculate_activation(b_valid_first_layer[j], beta)
-                b_valid_output = calculate_b(weights_second_layer, output_valid_first_layer, bias_second_layer, 4, 0)
-                outputs_val_all[index] = calculate_activation(b_valid_output, beta)
-                energy_values[1, i] += calculate_energy(valid_target_data, outputs_val_all[index])
-
+                # Calculate energy values for valid set
+                for index in range(200):
+                    valid_input_data = [valid_dim1[index], valid_dim2[index]]
+                    valid_target_data = valid_target[index]
+                    b_valid_first_layer = np.zeros(4)
+                    output_valid_first_layer = np.zeros(4)
+                    for j in range(4):
+                        b_valid_first_layer[j] = calculate_b(weights_first_layer, valid_input_data, bias_first_layer[j], 2, j)
+                        output_valid_first_layer[j] = calculate_activation(b_valid_first_layer[j], beta)
+                    b_valid_output = calculate_b(weights_second_layer, output_valid_first_layer, bias_second_layer, 4, 0)
+                    outputs_val_all[index] = calculate_activation(b_valid_output, beta)
+                    energy_values[1, energy_index] += calculate_energy(valid_target_data, outputs_val_all[index])
+                energy_index+=1
             # Plot
-        plt.plot(range(iterations), energy_values[0, :])
-        plt.plot(range(iterations), energy_values[1, :])
+
+        plot_factor = 100
+        #energy_values2 = [energy_values[0,i] for i in range(0, iterations,plot_factor)]
+        #energy_values3 = [energy_values[1,i] for i in range(0, iterations,plot_factor)]
+        plt.plot(range(int(iterations/plot_factor)), energy_values[0, :])
+        plt.plot(range(int(iterations/plot_factor)), energy_values[1, :])
 
         class_error_train[runs] = sum(abs(train_target - outputs_train_all)) / (2 * 300)
         class_error_val[runs] = sum(abs(valid_target - outputs_val_all)) / (2 * 200)
@@ -250,4 +257,4 @@ def run_3b():
 
 
 if __name__ == '__main__':
-    run_3a()
+    run_3b()

@@ -81,7 +81,6 @@ if __name__ == '__main__':
         p = 40
         patterns = create_random_patterns(N, p)
         weights = create_weight_matrix(patterns, N)
-
         time_max = 10000
 
         m = calculate_m_over_time(N, beta, patterns[0], weights, time_max)
