@@ -4,6 +4,7 @@ import csv
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import math
+
 print('Theo äter infekterad varfylld pungkula till middag')
 
 
@@ -40,7 +41,7 @@ def create_biases(number_of_neurons):
 
 
 def calculate_energy(target, output):
-    return 1/2 * (target - output)**2
+    return 1 / 2 * (target - output) ** 2
 
 
 def calculate_energy_prime(target, output):
@@ -48,24 +49,24 @@ def calculate_energy_prime(target, output):
 
 
 def calculate_b(weights, input_data, bias, neurons_prev_layer, index):
-    sum = 0
+    summa = 0
     for i in range(neurons_prev_layer):
-        sum += weights[i][index] * input_data[i]
-    return sum - bias
+        summa += weights[i][index] * input_data[i]
+    return summa - bias
 
 
 def calculate_activation(b, beta):
-    return np.tanh(b*beta)
+    return np.tanh(b * beta)
 
 
 def calculate_activation_prime(b, beta):
-    return beta * (1 - calculate_activation(b, beta)**2)
+    return beta * (1 - calculate_activation(b, beta) ** 2)
 
 
 def calculate_weight_update(learning_rate, b, input_data, output, target, beta):
     energy_prime = calculate_energy_prime(target, output)
     activation_prime = calculate_activation_prime(b, beta)
-    return learning_rate*energy_prime*activation_prime*input_data
+    return learning_rate * energy_prime * activation_prime * input_data
 
 
 def calculate_first_layer_delta(delta_second_layer, old_weights, b, beta):
@@ -75,27 +76,27 @@ def calculate_first_layer_delta(delta_second_layer, old_weights, b, beta):
 def calculate_bias_update(learning_rate, b, output, target, beta):
     energy_prime = calculate_energy_prime(target, output)
     activation_prime = calculate_activation_prime(b, beta)
-    return -learning_rate*energy_prime*activation_prime
+    return -learning_rate * energy_prime * activation_prime
 
 
 def run_3a():
     train_dim1, train_dim2, train_target = read_data('train_data_2017.txt')
     valid_dim1, valid_dim2, valid_target = read_data('valid_data_2017.txt')
     learning_rate = 0.02
-    beta = 1/2
+    beta = 1 / 2
     class_error_train = np.zeros(10)
     class_error_val = np.zeros(10)
 
     for runs in range(10):
         weights = create_weights(2, 1)
         bias = create_biases(1)
-        iterations = 10**6
-        energy_values = np.zeros([2, int(iterations/100)])
+        iterations = 10 ** 6
+        energy_values = np.zeros([2, int(iterations / 100)])
         outputs_train_all = np.zeros(300)
         outputs_val_all = np.zeros(200)
         energy_index = 0
 
-        for i in tqdm(iterable=range(iterations), desc="Timesteps for run %d"%runs, mininterval=15):
+        for i in tqdm(iterable=range(iterations), desc="Timesteps for run %d" % runs, mininterval=15):
             # Calculate output on train data
             rand = random.randint(0, 299)
             input_data = [train_dim1[rand], train_dim2[rand]]
@@ -105,7 +106,8 @@ def run_3a():
 
             # Calculate gradient and update weights and bias
             for index in range(len(weights)):
-                weights[index] += calculate_weight_update(learning_rate, b, input_data[index], output, target_data, beta)
+                weights[index] += calculate_weight_update(learning_rate, b, input_data[index], output, target_data,
+                                                          beta)
             bias += calculate_bias_update(learning_rate, b, output, target_data, beta)
             if i % 100 == 0:
                 # Calculate energy values for train set
@@ -126,11 +128,11 @@ def run_3a():
                 energy_index += 1
 
         # Plot
-        plt.plot(range(int(iterations/100)), energy_values[0, :])
-        plt.plot(range(int(iterations/100)), energy_values[1, :])
+        plt.plot(range(0, iterations, 100), energy_values[0, :])
+        plt.plot(range(0, iterations, 100), energy_values[1, :])
 
-        class_error_train[runs] = sum(abs(train_target - outputs_train_all))/(2*300)
-        class_error_val[runs] = sum(abs(valid_target - outputs_val_all))/(2*200)
+        class_error_train[runs] = sum(abs(train_target - outputs_train_all)) / (2 * 300)
+        class_error_val[runs] = sum(abs(valid_target - outputs_val_all)) / (2 * 200)
 
     with open('classification_errors_3a.txt', 'w') as file:
         file.write('Train: ')
@@ -141,11 +143,11 @@ def run_3a():
     min_class_error = [np.min(class_error_train), np.min(class_error_val)]
     var_class_error = [np.var(class_error_train), np.var(class_error_val)]
     print('Average training classification error: %f \t Average validation classification error: %f \n ' % (
-    avg_class_error[0], avg_class_error[1]))
+        avg_class_error[0], avg_class_error[1]))
     print('Minimum training classification error: %f \t Minimum validation classification error: %f \n ' % (
-    min_class_error[0], min_class_error[1]))
+        min_class_error[0], min_class_error[1]))
     print('Variance training classification error: %f \t Variance validation classification error: %f \n ' % (
-    var_class_error[0], var_class_error[1]))
+        var_class_error[0], var_class_error[1]))
     plt.xlabel('Time steps')
     plt.ylabel('Energy function')
     plt.show()
@@ -165,12 +167,12 @@ def run_3b():
         weights_second_layer = create_weights(4, 1)
         bias_first_layer = create_biases(4)
         bias_second_layer = create_biases(1)
-        iterations = 10 ** 6
-        energy_values = np.zeros([2, int(iterations/100)])
+        iterations = 10 ** 3
+        energy_values = np.zeros([2, int(iterations / 100)])
         outputs_train_all = np.zeros(300)
         outputs_val_all = np.zeros(200)
         energy_index = 0
-        for i in tqdm(iterable=range(iterations), desc="Timesteps for run %d"%runs, mininterval=15):
+        for i in tqdm(iterable=range(iterations), desc="Timesteps for run %d" % runs, mininterval=15):
             # Calculate output on train data
             rand = random.randint(0, 299)
             input_data = [train_dim1[rand], train_dim2[rand]]
@@ -187,18 +189,20 @@ def run_3b():
             weights_second_layer_tmp = weights_second_layer
             delta_second_layer = (target_data - output) * calculate_activation_prime(b_output, beta)
             for index in range(len(weights_second_layer)):
-                weights_second_layer[index] += calculate_weight_update(learning_rate, b_output, output_first_layer[index],
+                weights_second_layer[index] += calculate_weight_update(learning_rate, b_output,
+                                                                       output_first_layer[index],
                                                                        output, target_data, beta)
             bias_second_layer += calculate_bias_update(learning_rate, b_output, output, target_data, beta)
 
             for column in range(weights_first_layer.shape[1]):
-                delta_first_layer_tmp = calculate_first_layer_delta(delta_second_layer, weights_second_layer_tmp[column],
+                delta_first_layer_tmp = calculate_first_layer_delta(delta_second_layer,
+                                                                    weights_second_layer_tmp[column],
                                                                     b_first_layer[column], beta)
                 for row in range(weights_first_layer.shape[0]):
                     weight_update_tmp = delta_first_layer_tmp * learning_rate * input_data[row]
                     weights_first_layer[row][column] += weight_update_tmp
                 bias_first_layer[column] += -learning_rate * delta_first_layer_tmp
-            if i%100==0:
+            if i % 100 == 0:
                 # Calculate energy values for train set
                 for index in range(300):
                     input_data = [train_dim1[index], train_dim2[index]]
@@ -219,23 +223,20 @@ def run_3b():
                     b_valid_first_layer = np.zeros(4)
                     output_valid_first_layer = np.zeros(4)
                     for j in range(4):
-                        b_valid_first_layer[j] = calculate_b(weights_first_layer, valid_input_data, bias_first_layer[j], 2, j)
+                        b_valid_first_layer[j] = calculate_b(weights_first_layer, valid_input_data, bias_first_layer[j],
+                                                             2, j)
                         output_valid_first_layer[j] = calculate_activation(b_valid_first_layer[j], beta)
-                    b_valid_output = calculate_b(weights_second_layer, output_valid_first_layer, bias_second_layer, 4, 0)
+                    b_valid_output = calculate_b(weights_second_layer, output_valid_first_layer, bias_second_layer, 4,
+                                                 0)
                     outputs_val_all[index] = calculate_activation(b_valid_output, beta)
                     energy_values[1, energy_index] += calculate_energy(valid_target_data, outputs_val_all[index])
-                energy_index+=1
-            # Plot
+                energy_index += 1
 
-        plot_factor = 100
-        #energy_values2 = [energy_values[0,i] for i in range(0, iterations,plot_factor)]
-        #energy_values3 = [energy_values[1,i] for i in range(0, iterations,plot_factor)]
-        plt.plot(range(int(iterations/plot_factor)), energy_values[0, :])
-        plt.plot(range(int(iterations/plot_factor)), energy_values[1, :])
+        plt.plot(range(0, iterations, 100), energy_values[0, :])
+        plt.plot(range(0, iterations, 100), energy_values[1, :])
 
         class_error_train[runs] = sum(abs(train_target - outputs_train_all)) / (2 * 300)
         class_error_val[runs] = sum(abs(valid_target - outputs_val_all)) / (2 * 200)
-
 
     with open('classification_errors_3b.txt', 'w') as file:
         file.write('Train: ')
