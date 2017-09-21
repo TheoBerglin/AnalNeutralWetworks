@@ -129,6 +129,11 @@ def run_3a():
         class_error_train[runs] = sum(abs(train_target - outputs_train_all))/(2*300)
         class_error_val[runs] = sum(abs(valid_target - outputs_val_all))/(2*200)
 
+    with open('classification_errors_3a.txt', 'w') as file:
+        file.write('Train: ')
+        file.write(str(class_error_train))
+        file.write('\nValid: ')
+        file.write(str(class_error_val))
     avg_class_error = [np.mean(class_error_train), np.mean(class_error_val)]
     min_class_error = [np.min(class_error_train), np.min(class_error_val)]
     var_class_error = [np.var(class_error_train), np.var(class_error_val)]
@@ -224,6 +229,12 @@ def run_3b():
         class_error_train[runs] = sum(abs(train_target - outputs_train_all)) / (2 * 300)
         class_error_val[runs] = sum(abs(valid_target - outputs_val_all)) / (2 * 200)
 
+
+    with open('classification_errors_3b.txt', 'w') as file:
+        file.write('Train: ')
+        file.write(str(class_error_train))
+        file.write('\nValid: ')
+        file.write(str(class_error_val))
     avg_class_error = [np.mean(class_error_train), np.mean(class_error_val)]
     min_class_error = [np.min(class_error_train), np.min(class_error_val)]
     var_class_error = [np.var(class_error_train), np.var(class_error_val)]
@@ -239,4 +250,4 @@ def run_3b():
 
 
 if __name__ == '__main__':
-    run_3b()
+    run_3a()
