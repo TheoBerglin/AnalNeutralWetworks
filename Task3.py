@@ -3,9 +3,6 @@ import random
 import csv
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-import math
-
-print('Theo äter infekterad varfylld pungkula till middag')
 
 
 def read_data(filename):
@@ -128,7 +125,9 @@ def run_3a():
                 energy_index += 1
 
         # Plot
+        plt.figure(1)
         plt.plot(range(0, iterations, 100), energy_values[0, :])
+        plt.figure(2)
         plt.plot(range(0, iterations, 100), energy_values[1, :])
 
         class_error_train[runs] = sum(abs(train_target - outputs_train_all)) / (2 * 300)
@@ -150,6 +149,11 @@ def run_3a():
         var_class_error[0], var_class_error[1]))
     plt.xlabel('Time steps')
     plt.ylabel('Energy function')
+    plt.title('Validation set')
+    plt.figure(1)
+    plt.xlabel('Time steps')
+    plt.ylabel('Energy function')
+    plt.title('Training set')
     plt.show()
 
 
@@ -264,4 +268,4 @@ def run_3b():
 
 
 if __name__ == '__main__':
-    run_3b()
+    run_3a()

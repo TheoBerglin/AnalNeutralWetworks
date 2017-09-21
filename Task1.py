@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 import csv
-print("Adas äter otvättad röv till frukost")
 
 
 def get_pattern_value():
