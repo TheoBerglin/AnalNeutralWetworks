@@ -167,7 +167,7 @@ def run_3b():
         weights_second_layer = create_weights(4, 1)
         bias_first_layer = create_biases(4)
         bias_second_layer = create_biases(1)
-        iterations = 10 ** 3
+        iterations = 10 ** 6
         energy_values = np.zeros([2, int(iterations / 100)])
         outputs_train_all = np.zeros(300)
         outputs_val_all = np.zeros(200)
@@ -231,8 +231,9 @@ def run_3b():
                     outputs_val_all[index] = calculate_activation(b_valid_output, beta)
                     energy_values[1, energy_index] += calculate_energy(valid_target_data, outputs_val_all[index])
                 energy_index += 1
-
+        plt.figure(1)
         plt.plot(range(0, iterations, 100), energy_values[0, :])
+        plt.figure(2)
         plt.plot(range(0, iterations, 100), energy_values[1, :])
 
         class_error_train[runs] = sum(abs(train_target - outputs_train_all)) / (2 * 300)
@@ -254,6 +255,11 @@ def run_3b():
         var_class_error[0], var_class_error[1]))
     plt.xlabel('Time steps')
     plt.ylabel('Energy function')
+    plt.title('Validation set')
+    plt.figure(1)
+    plt.xlabel('Time steps')
+    plt.ylabel('Energy function')
+    plt.title('Training set')
     plt.show()
 
 
