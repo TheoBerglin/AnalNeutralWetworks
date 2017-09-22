@@ -42,14 +42,14 @@ def calculate_energy(target, output):
 
 
 def calculate_energy_prime(target, output):
-    return (target - output)
+    return target - output
 
 
 def calculate_b(weights, input_data, bias, neurons_prev_layer, index):
-    summa = 0
+    b = 0
     for i in range(neurons_prev_layer):
-        summa += weights[i][index] * input_data[i]
-    return summa - bias
+        b += weights[i][index] * input_data[i]
+    return b - bias
 
 
 def calculate_activation(b, beta):
@@ -83,17 +83,20 @@ def run_3a():
     beta = 1 / 2
     class_error_train = np.zeros(10)
     class_error_val = np.zeros(10)
+    iterations = 10 ** 6
 
     for runs in range(10):
+        # Initialize weights
         weights = create_weights(2, 1)
+        # Initialize bias
         bias = create_biases(1)
-        iterations = 10 ** 6
-        energy_values = np.zeros([2, int(iterations / 100)])
         outputs_train_all = np.zeros(300)
         outputs_val_all = np.zeros(200)
         energy_index = 0
+        calc_energy_index = 100
+        energy_values = np.zeros([2, int(iterations / calc_energy_index)])
 
-        for i in tqdm(iterable=range(iterations), desc="Timesteps for run %d" % runs, mininterval=15):
+        for i in tqdm(iterable=range(iterations), desc="Time steps for run %d" % runs, mininterval=15):
             # Calculate output on train data
             rand = random.randint(0, 299)
             input_data = [train_dim1[rand], train_dim2[rand]]
@@ -106,7 +109,9 @@ def run_3a():
                 weights[index] += calculate_weight_update(learning_rate, b, input_data[index], output, target_data,
                                                           beta)
             bias += calculate_bias_update(learning_rate, b, output, target_data, beta)
-            if i % 100 == 0:
+
+            # Calculate energy values every 100 time step
+            if i % calc_energy_index == 0:
                 # Calculate energy values for train set
                 for index in range(300):
                     input_data = [train_dim1[index], train_dim2[index]]
@@ -122,22 +127,23 @@ def run_3a():
                     b_valid = calculate_b(weights, valid_input_data, bias, 2, 0)
                     outputs_val_all[index] = calculate_activation(b_valid, beta)
                     energy_values[1, energy_index] += calculate_energy(valid_target_data, outputs_val_all[index])
-                energy_index += 1
+                energy_index += 1  # Keep track of enery index
 
         # Plot
         plt.figure(1)
-        plt.plot(range(0, iterations, 100), energy_values[0, :])
+        plt.plot(range(0, iterations, calc_energy_index), energy_values[0, :])
         plt.figure(2)
-        plt.plot(range(0, iterations, 100), energy_values[1, :])
+        plt.plot(range(0, iterations, calc_energy_index), energy_values[1, :])
 
         class_error_train[runs] = sum(abs(train_target - outputs_train_all)) / (2 * 300)
         class_error_val[runs] = sum(abs(valid_target - outputs_val_all)) / (2 * 200)
-
+    # Save the classification errors for training and validation set
     with open('classification_errors_3a.txt', 'w') as file:
         file.write('Train: ')
         file.write(str(class_error_train))
         file.write('\nValid: ')
         file.write(str(class_error_val))
+    # Error calculations
     avg_class_error = [np.mean(class_error_train), np.mean(class_error_val)]
     min_class_error = [np.min(class_error_train), np.min(class_error_val)]
     var_class_error = [np.var(class_error_train), np.var(class_error_val)]
@@ -147,6 +153,7 @@ def run_3a():
         min_class_error[0], min_class_error[1]))
     print('Variance training classification error: %f \t Variance validation classification error: %f \n ' % (
         var_class_error[0], var_class_error[1]))
+    # Plotting
     plt.xlabel('Time steps')
     plt.ylabel('Energy function')
     plt.title('Validation set')
@@ -165,17 +172,21 @@ def run_3b():
     beta = 1 / 2
     class_error_train = np.zeros(10)
     class_error_val = np.zeros(10)
-
+    calc_energy_index = 100
+    iterations = 10 ** 6
     for runs in range(10):
+        # Initialize weights
         weights_first_layer = create_weights(2, 4)
         weights_second_layer = create_weights(4, 1)
+        # Initialize biases
         bias_first_layer = create_biases(4)
         bias_second_layer = create_biases(1)
-        iterations = 10 ** 6
-        energy_values = np.zeros([2, int(iterations / 100)])
+        # Energy calculations
+        energy_values = np.zeros([2, int(iterations / calc_energy_index)])
+        energy_index = 0
         outputs_train_all = np.zeros(300)
         outputs_val_all = np.zeros(200)
-        energy_index = 0
+
         for i in tqdm(iterable=range(iterations), desc="Timesteps for run %d" % runs, mininterval=15):
             # Calculate output on train data
             rand = random.randint(0, 299)
@@ -206,7 +217,7 @@ def run_3b():
                     weight_update_tmp = delta_first_layer_tmp * learning_rate * input_data[row]
                     weights_first_layer[row][column] += weight_update_tmp
                 bias_first_layer[column] += -learning_rate * delta_first_layer_tmp
-            if i % 100 == 0:
+            if i % calc_energy_index == 0:
                 # Calculate energy values for train set
                 for index in range(300):
                     input_data = [train_dim1[index], train_dim2[index]]
@@ -236,18 +247,19 @@ def run_3b():
                     energy_values[1, energy_index] += calculate_energy(valid_target_data, outputs_val_all[index])
                 energy_index += 1
         plt.figure(1)
-        plt.plot(range(0, iterations, 100), energy_values[0, :])
+        plt.plot(range(0, iterations, calc_energy_index), energy_values[0, :])
         plt.figure(2)
-        plt.plot(range(0, iterations, 100), energy_values[1, :])
+        plt.plot(range(0, iterations, calc_energy_index), energy_values[1, :])
 
         class_error_train[runs] = sum(abs(train_target - outputs_train_all)) / (2 * 300)
         class_error_val[runs] = sum(abs(valid_target - outputs_val_all)) / (2 * 200)
-
+    # Save the classification errors for training and validation set
     with open('classification_errors_3b.txt', 'w') as file:
         file.write('Train: ')
         file.write(str(class_error_train))
         file.write('\nValid: ')
         file.write(str(class_error_val))
+    # Output calculations
     avg_class_error = [np.mean(class_error_train), np.mean(class_error_val)]
     min_class_error = [np.min(class_error_train), np.min(class_error_val)]
     var_class_error = [np.var(class_error_train), np.var(class_error_val)]
@@ -257,6 +269,7 @@ def run_3b():
         min_class_error[0], min_class_error[1]))
     print('Variance training classification error: %f \t Variance validation classification error: %f \n ' % (
         var_class_error[0], var_class_error[1]))
+    # Plotting
     plt.xlabel('Time steps')
     plt.ylabel('Energy function')
     plt.title('Validation set')
@@ -266,6 +279,15 @@ def run_3b():
     plt.title('Training set')
     plt.show()
 
-
+def plot_training_data():
+    train_dim1, train_dim2, train_target = read_data('train_data_2017.txt')
+    for i in range(300):
+        if train_target[i] == 1:
+            plt.scatter(train_dim1[i], train_dim2[i], color='b')
+        else:
+            plt.scatter(train_dim1[i], train_dim2[i], color='r')
+    plt.show()
 if __name__ == '__main__':
-    run_3a()
+    plot_training_data()
+    #run_3a()
+    # run_3b()
